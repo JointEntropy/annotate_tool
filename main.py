@@ -20,6 +20,7 @@ def main():
     logger.info('Add handlers...')
     dp = updater.dispatcher
     dp.add_handler(CommandHandler("start", handlers.start))
+    dp.add_handler(CommandHandler("help", handlers.help_command))
     dp.add_handler(CallbackQueryHandler(handlers.handle_response))
     dp.add_handler(MessageHandler(Filters.text, handlers.echo))
     dp.add_error_handler(handlers.error)

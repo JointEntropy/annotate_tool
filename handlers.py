@@ -7,53 +7,54 @@ from telegram.error import (TelegramError, Unauthorized, BadRequest,
 from loguru import logger
 import traceback
 from telegram import InlineKeyboardMarkup, InlineKeyboardButton
+from backend import Backend
+
 
 config = load_config()
+backend = Backend(config['mongo'])
 
-samples_to_annotate = [
-    {'idx': 1, 'text': 'citilink'},
-    {'idx': 2, 'text': 'puk minnnnn'},
-]
-idx = 0
+HELP_TEXT = """
+Правило клуба диванных разметчиков.
+1. Никому не рассказывать про бота для разметки.
+2. Никому никогда не рассказывать про бота для разметки.
 
-chad_ids = dict()
+...
 
+1. Алиэкспресс не размечаем?
+2. 
+"""
 
-def get_sample_to_annotate():
-    global idx
-    if idx < len(samples_to_annotate):
-        item = samples_to_annotate[idx]
-        idx += 1
-        return item
+label_form_template = '''
+id: {sample_id}
+Текст:
+"{text}"
+'''
 
 
 def prepare_markup():
-    instance = get_sample_to_annotate()
+    instance = backend.get_sample()
     if instance is None:
         return 'Now new samples', InlineKeyboardMarkup(inline_keyboard=[])
     keyboard = InlineKeyboardMarkup(inline_keyboard=[[
-        InlineKeyboardButton('+', callback_data=json.dumps({instance['idx']: '+'})),
-        InlineKeyboardButton('-', callback_data=json.dumps({instance['idx']: '-'}))
+        InlineKeyboardButton('+', callback_data=json.dumps({'_id': instance['_id'], 'label': '+'})),
+        InlineKeyboardButton('-', callback_data=json.dumps({'_id': instance['_id'], 'label': '-'})),
+        InlineKeyboardButton('?', callback_data=json.dumps({'_id': instance['_id'], 'label': '?'})),
     ]])
-    text_data = instance['text']
+    text_data =label_form_template.format(sample_id=instance['_id'], text=instance['text'])
     return text_data, keyboard
 
 
 def start(bot, update):
     logger.info('Start request handled')
-    # chad_ids[update.message.chat_id] = instance_idx
-
     text_data, keyboard = prepare_markup()
-    bot.sendMessage(chat_id=update.message.chat_id, text=text_data, reply_markup=keyboard)
+    bot.sendMessage(chat_id=update.message.chat_id, text=text_data[:4094], reply_markup=keyboard)
 
 
 def handle_response(bot, update):
     query = update.callback_query
-    # print(query.answer())
-    # reply_markup = query.message.reply_markup
     reply_markup = InlineKeyboardMarkup(inline_keyboard=[])
-    answer = query.data
-    print(answer)
+    payback = json.loads(query.data)
+    backend.label_sample(sample_id=payback['_id'], label=payback['label'])
     query.edit_message_reply_markup(reply_markup)
 
     # Send new
@@ -65,7 +66,8 @@ def echo(bot, update):
     bot.sendMessage(chat_id=update.message.chat_id, text='Я работаю')
 
 
-
+def help_command(bot, update):
+    bot.sendMessage(chat_id=update.message.chat_id, text=HELP_TEXT)
 
 
 def error(bot, update, error):

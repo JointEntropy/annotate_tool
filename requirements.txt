@@ -1,2 +1,5 @@
 python-telegram-bot==12.2.0
 loguru==0.6.0
+git+ssh://git@github.com/JointEntropy/catchblogger_tools.git@235af9bdf37a52f1575afc0c14375e7ede2cb8a2
+pandas
+pyarrow
