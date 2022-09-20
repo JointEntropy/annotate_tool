@@ -14,14 +14,21 @@ config = load_config()
 backend = Backend(config['mongo'])
 
 HELP_TEXT = """
-Правило клуба диванных разметчиков.
-1. Никому не рассказывать про бота для разметки.
-2. Никому никогда не рассказывать про бота для разметки.
+Размечаем описания, в котором есть отсылка на товары из интернета-магазина.
+Цель разметить данные так, чтобы модель, обученная  на размеченных данных,  могла по тексту понять и подстветить примеры, где есть упоминания 
+интернет-магазина.
 
-...
+1. Лучше разметить меньше, но точнее. Если нет уверенности, то ставим "?". 
+2. Часть ссылок в описании поломана по техничесикм причинам. Это не должно влиять на логику разметки.
+Если из текста ясно, что это ссылка на товар в интернет магазине => `+`
+3. Если например обозревают игрушки с алиэксперсс и есть ссылка на товар => `+`
+4. Продажа услуг(курсы английского, курсы эзотерики и т.п.) не относятся к целевому сегменту => `-`
+5. Функционала исправления ошибки пока нет. Если допустил ошибку переслать сообщение разработчку этой белеберды.
 
-1. Алиэкспресс не размечаем?
-2. 
+Примеров много, нет цели разметить всё  поэтому делаем не до победного конца.
+
+Для начала запускаем `/start`. Если поток прервётся - повторно `/start`.
+
 """
 
 label_form_template = '''
@@ -41,13 +48,13 @@ def prepare_markup():
         InlineKeyboardButton('?', callback_data=json.dumps({'_id': instance['_id'], 'label': '?'})),
     ]])
     text_data =label_form_template.format(sample_id=instance['_id'], text=instance['text'])
-    return text_data, keyboard
+    return text_data[:4094], keyboard
 
 
 def start(bot, update):
     logger.info('Start request handled')
     text_data, keyboard = prepare_markup()
-    bot.sendMessage(chat_id=update.message.chat_id, text=text_data[:4094], reply_markup=keyboard)
+    bot.sendMessage(chat_id=update.message.chat_id, text=text_data, reply_markup=keyboard)
 
 
 def handle_response(bot, update):
