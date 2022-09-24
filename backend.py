@@ -3,6 +3,7 @@ import datetime
 from catchblogger_tools.mongo import spawn_mongo_db_conn
 from utils import load_config
 import random
+from typing import Optional
 
 
 class Backend:
@@ -15,10 +16,13 @@ class Backend:
         items_lst = list(items_iter)
         return random.choice(items_lst)
 
-    def label_sample(self, sample_id, label, labeler):
+    def label_sample(self, sample_id: str, label: str, labeler: str):
         self.annotate_collection.update_one({'_id': sample_id},
                                             {'$set': {'label': label, 'labeler': labeler,
                                                       'update_ts': datetime.datetime.utcnow()}}, upsert=True)
+
+    def delete_label(self, sample_id: str, user_id: Optional[str] = False):
+        self.annotate_collection.update_one({'_id': sample_id}, {'$unset': {'label': '', 'labeler': ''}})
 
 
 if __name__ == '__main__':
