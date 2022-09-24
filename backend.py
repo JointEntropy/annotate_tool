@@ -1,5 +1,6 @@
 from catchblogger_tools.mongo import spawn_mongo_db_conn
 from utils import load_config
+import random
 
 
 class Backend:
@@ -8,7 +9,9 @@ class Backend:
         self.annotate_collection = spawn_mongo_db_conn(config).get_collection(config['table_name'])
 
     def get_sample(self):
-        return self.annotate_collection.find_one({'label': {"$exists": False}})
+        items_iter = self.annotate_collection.find({'label': {"$exists": False}}).limit(20)
+        items_lst = list(items_iter)
+        return random.choice(items_lst)
 
     def label_sample(self, sample_id, label):
         self.annotate_collection.update_one({'_id': sample_id} ,
