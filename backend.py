@@ -1,3 +1,5 @@
+import datetime
+
 from catchblogger_tools.mongo import spawn_mongo_db_conn
 from utils import load_config
 import random
@@ -13,9 +15,10 @@ class Backend:
         items_lst = list(items_iter)
         return random.choice(items_lst)
 
-    def label_sample(self, sample_id, label):
-        self.annotate_collection.update_one({'_id': sample_id} ,
-                                            {'$set': {'label': label}}, upsert=True)
+    def label_sample(self, sample_id, label, labeler):
+        self.annotate_collection.update_one({'_id': sample_id},
+                                            {'$set': {'label': label, 'labeler': labeler,
+                                                      'update_ts': datetime.datetime.utcnow()}}, upsert=True)
 
 
 if __name__ == '__main__':

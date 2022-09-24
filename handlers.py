@@ -61,7 +61,7 @@ def handle_response(bot, update):
     query = update.callback_query
     reply_markup = InlineKeyboardMarkup(inline_keyboard=[])
     payback = json.loads(query.data)
-    backend.label_sample(sample_id=payback['_id'], label=payback['label'])
+    backend.label_sample(sample_id=payback['_id'], label=payback['label'], labeler=update.effective_chat['username'])
     query.edit_message_reply_markup(reply_markup)
 
     # Send new
